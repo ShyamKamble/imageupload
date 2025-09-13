@@ -1,4 +1,3 @@
-// src/components/Card.jsx
 "use client";
 import React from "react";
 import Link from "next/link";
@@ -18,6 +17,7 @@ export const Card = React.memo(({ card, index, hovered, setHovered }) => (
       alt={card.title}
       className="object-cover absolute inset-0 w-full h-full"
     />
+
     <div
       className={cn(
         "absolute inset-0 bg-black/50 flex items-end py-8 px-4 transition-opacity duration-300",
@@ -32,6 +32,7 @@ export const Card = React.memo(({ card, index, hovered, setHovered }) => (
 ));
 Card.displayName = "Card";
 
+// AddCard Component — same size as Card, but routes to upload
 export const AddCard = () => (
   <Link
     href="/upload"

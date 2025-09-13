@@ -1,73 +1,94 @@
-"use client"
-import { FocusCards } from "@/components/ui/focus-cards";
+"use client";
+
+import React, { useEffect, useState } from "react";
 import { supabase } from "../../src/lib/superbaseClient";
-import { useEffect, useState } from "react";
+import ZoomImage from "../componentbyme/Zoomimg";
+import { useRouter } from "next/navigation";
+
 
 export function FocusCardsDemo() {
-  // const cards = [
-  //   {
-  //     title: "Forest Adventure",
-  //     src: "https://images.unsplash.com/photo-1518710843675-2540dd79065c?q=80&w=3387&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
-  //   },
-  //   {
-  //     title: "Valley of life",
-  //     src: "https://images.unsplash.com/photo-1600271772470-bd22a42787b3?q=80&w=3072&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
-  //   },
-  //   {
-  //     title: "Sala behta hi jayega",
-  //     src: "https://images.unsplash.com/photo-1505142468610-359e7d316be0?q=80&w=3070&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
-  //   },
-  //   {
-  //     title: "Camping is for pros",
-  //     src: "https://images.unsplash.com/photo-1486915309851-b0cc1f8a0084?q=80&w=3387&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
-  //   },
-  //   {
-  //     title: "The road not taken",
-  //     src: "https://images.unsplash.com/photo-1507041957456-9c397ce39c97?q=80&w=3456&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
-  //   },
-  //   {
-  //     title: "The First Rule",
-  //     src: "https://assets.aceternity.com/the-first-rule.png",
-  //   },
-  // ];
-    const [cards, setCards] = useState([]);
-
+  const [cards, setCards] = useState([]);
+  const router = useRouter();
   useEffect(() => {
-  let ignore = false;
+    let ignore = false;
 
-  const fetchImages = async () => {
-    const { data, error } = await supabase.storage
-      .from("firstproject")
-      .list("", { limit: 100, sortBy: { column: "created_at", order: "desc" } });
+    const fetchImages = async () => {
+  const { data, error } = await supabase.storage
+    .from("firstproject")
+    .list("", { limit: 100, sortBy: { column: "created_at", order: "desc" } });
 
-    if (error) {
-      console.error("Error fetching images:", error);
-      return;
-    }
+  if (error) {
+    console.error("Error fetching images:", error);
+    return;
+  }
 
-    if (!ignore) {
-      const fetchedCards = data
-        .filter(file => file.name) // ensure it's a file, not folder
-        .map(file => {
-          const { data: publicUrlData } = supabase.storage
-            .from("firstproject")
-            .getPublicUrl(file.name);
-          return {
-            title: file.name.split(".")[0],
-            src: publicUrlData.publicUrl,
-          };
-        });
+  if (!ignore) {
+    const fetched = data
+      .filter((file) => file.name)
+      .map((file) => {
+        const { data: publicUrlData } = supabase.storage
+          .from("firstproject")
+          .getPublicUrl(file.name);
 
-      setCards(fetchedCards);
-    }
-  };
+        return {
+          id: file.id ?? file.name, 
+          title: file.name.split(".")[0],
+          src: publicUrlData.publicUrl,
+          storagePath: file.name, 
+        };
+      });
 
-  fetchImages();
+    setCards(fetched);
+  }
+};
 
-  return () => {
-    ignore = true; // prevent state updates on unmount
-  };
-}, []);
 
-  return <FocusCards cards={cards} />;
+    fetchImages();
+    return () => { ignore = true; };
+  }, []);
+
+  // Same grid, same sizes as your original FocusCards
+  return (
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-10 max-w-5xl mx-auto md:px-8 w-full">
+       
+      {cards.map((card) => (
+        <div
+          key={card.id}
+          className="rounded-lg relative bg-gray-100 dark:bg-neutral-900 overflow-hidden"
+        >
+         <ZoomImage
+  src={card.src}
+  alt={card.title}
+  layoutKey={card.id}
+  thumbClass="w-full h-60 md:h-96"
+  storagePath={card.storagePath} 
+  onDeleted={(deletedPath) => {
+    
+    setCards((prev) => prev.filter((c) => c.storagePath !== deletedPath));
+  }}
+/>
+
+
+          
+          <div className="pointer-events-none absolute inset-0 bg-black/50 opacity-0 hover:opacity-100 transition-opacity duration-300 flex items-end py-8 px-4">
+            <div className="text-xl md:text-2xl font-medium bg-clip-text text-transparent bg-gradient-to-b from-neutral-50 to-neutral-200">
+              {card.title}
+            </div>
+          </div>
+          
+        </div>
+        
+      ))}
+      <div
+        onClick={() => router.push("/for-you/index")}
+        className="rounded-lg relative h-60 md:h-96 bg-gray-100 dark:bg-neutral-900 border-2 border-dashed border-gray-400 flex flex-col items-center justify-center cursor-pointer hover:bg-gray-200 dark:hover:bg-neutral-800 transition-all duration-300"
+      >
+        <span className="text-6xl font-bold text-gray-500">+</span>
+        <span className="mt-3 text-gray-500 text-lg font-medium">
+          Add Image
+        </span>
+      </div>
+    </div>
+  );
 }
+// src/componentbyme/Focuscards.jsx
