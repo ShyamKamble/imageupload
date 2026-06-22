@@ -14,7 +14,11 @@ app = FastAPI(title="Image Upload API")
 # CORS configuration
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],  # Your Next.js frontend URL
+    allow_origins=[
+        "http://localhost:3000",  # Local development
+        "http://13.126.105.133:3000",  # EC2 frontend (if running on EC2)
+        "*"  # Allow all origins (only for development/testing)
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
