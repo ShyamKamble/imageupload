@@ -1,10 +1,17 @@
-bto3jsnsb__s_m():"""FetchdabasealfomAWSS M"""cERTdsrentialsgon_nameAW_GONap-outh1Crae aecretsMagrcletssiboto3.sesoSsion()
-        lt = io.li(
-            servcame='ecresmagr',    regionmgi_m)get__valueseget__valuerec.g(hs)ert.get(dbn)set.g()set.g()prtsct.get(port', 5432)exceptExceptionase:fErrorfethig redenals frm Secrets Maager:{e}")
-        # Fallbak t evonmntvariable
-        retrn None
+import os
 
-def get_db_onig(:"""Getdatabaseconfiguration,tryingSecs Manager fist, then evvariables"""#TrySecretsManagerfirstsrs_config =get_db_rednals_frm_secrets_magr()
-secets_cnfig:
-       usecrets_coig
-int() Exportth daabaseurationbofg
+def get_db_config():
+    """Get database configuration from environment variables"""
+    return {
+        'host': os.getenv('DB_HOST', 'database-1.cju88ymggwzm.ap-south-1.rds.amazonaws.com'),
+        'port': int(os.getenv('DB_PORT', '5432')),
+        'database': os.getenv('DB_NAME', 'postgres'),
+        'user': os.getenv('DB_USER', 'postgres'),
+        'password': os.getenv('DB_PASSWORD', 'Awsuserdbpassword')
+    }
+
+# Export the database configuration
+DB_CONFIG = get_db_config()
+
+# Print connection info (without password) for debugging
+print(f"Database config loaded: host={DB_CONFIG['host']}, database={DB_CONFIG['database']}, user={DB_CONFIG['user']}")
