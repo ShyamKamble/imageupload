@@ -16,7 +16,8 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=[
         "http://localhost:3000",  # Local development
-        "http://13.126.105.133:3000",  # EC2 frontend (if running on EC2)
+        "http://aws-bucket-frontend-pages.s3-website-ap-south-1.amazonaws.com",  # S3 frontend
+        "http://aws-bucket-frontend-pages.s3-website.ap-south-1.amazonaws.com",  # Alternative S3 URL
         "*"  # Allow all origins (only for development/testing)
     ],
     allow_credentials=True,
