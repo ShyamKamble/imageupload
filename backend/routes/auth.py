@@ -94,7 +94,7 @@ async def register(user: UserRegister):
             "INSERT INTO users (email, username, password_hash) VALUES (%s, %s, %s) RETURNING id",
             (user.email, user.username, hashed_password)
         )
-        user_id = cursor.fetchone()[0]
+        user_id = cursor.fetchone()['id']
         conn.commit()
         
         # Create access token
