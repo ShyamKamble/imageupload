@@ -1,6 +1,7 @@
-from fastapi import FastAPI, HTTPException, Depends, UploadFile, File
+from fastapi import FastAPI, HTTPException, Depends, UploadFile, File, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 from typing import Optional
 import jwt
@@ -11,19 +12,35 @@ from routes.image import router as image_router, get_current_user
 
 app = FastAPI(title="Image Upload API")
 
-# CORS configuration
+# Environment-based CORS configuration
+ENVIRONMENT = os.getenv("ENVIRONMENT", "development")
+
+if ENVIRONMENT == "production":
+    allowed_origins = [
+        "http://aws-bucket-frontend-pages.s3-website.ap-south-1.amazonaws.com",
+    ]
+else:
+    allowed_origins = [
+        "http://localhost:3000",
+        "http://aws-bucket-frontend-pages.s3-website.ap-south-1.amazonaws.com",
+        "*"  # Only for development
+    ]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:3000",  # Local development
-        "http://aws-bucket-frontend-pages.s3-website-ap-south-1.amazonaws.com",  # S3 frontend
-        "http://aws-bucket-frontend-pages.s3-website.ap-south-1.amazonaws.com",  # Alternative S3 URL
-        "*"  # Allow all origins (only for development/testing)
-    ],
+    allow_origins=allowed_origins,
     allow_credentials=True,
-    allow_methods=["*"],
+    allow_methods=["GET", "POST", "PUT", "DELETE"],
     allow_headers=["*"],
 )
+
+# Global exception handler
+@app.exception_handler(HTTPException)
+async def http_exception_handler(request: Request, exc: HTTPException):
+    return JSONResponse(
+        status_code=exc.status_code,
+        content={"message": exc.detail, "status_code": exc.status_code}
+    )
 
 # Include routers
 app.include_router(auth_router, prefix="/auth", tags=["Authentication"])
@@ -34,6 +51,7 @@ async def root():
     return {
         "message": "Image Upload API",
         "version": "1.0.0",
+        "environment": ENVIRONMENT,
         "endpoints": {
             "auth": "/auth",
             "images": "/api/images"
