@@ -9,7 +9,7 @@ export default function LoginPage() {
   const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [name, setName] = useState("");
+  const [username, setUsername] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -20,13 +20,15 @@ export default function LoginPage() {
 
     try {
       if (isLogin) {
-        await authAPI.login(email, password);
-        window.location.href = "/for-you/index";
+        // Login with username
+        await authAPI.login(username, password);
+        window.location.href = "/for-you";
       } else {
-        await authAPI.register(email, password, name);
+        // Register with email, username, and password
+        await authAPI.register(email, username, password);
         alert("Registration successful! Please login.");
         setIsLogin(true);
-        setName("");
+        setEmail("");
       }
     } catch (err) {
       setError(err.message || "An error occurred");
@@ -51,24 +53,24 @@ export default function LoginPage() {
         <form onSubmit={handleSubmit} className="space-y-4">
           {!isLogin && (
             <div>
-              <label className="block text-sm font-medium mb-2">Name</label>
+              <label className="block text-sm font-medium mb-2">Email</label>
               <Input
-                type="text"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                placeholder="Enter your name"
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="Enter your email"
                 required
               />
             </div>
           )}
 
           <div>
-            <label className="block text-sm font-medium mb-2">Email</label>
+            <label className="block text-sm font-medium mb-2">Username</label>
             <Input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="Enter your email"
+              type="text"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              placeholder="Enter your username"
               required
             />
           </div>
