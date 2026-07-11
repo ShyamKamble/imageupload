@@ -23,15 +23,15 @@ else:
     allowed_origins = [
         "http://localhost:3000",
         "http://aws-bucket-frontend-pages.s3-website.ap-south-1.amazonaws.com",
-        "*"  # Only for development
     ]
 
 app.add_middleware(
     CORSMiddleware,
     allow_origins=allowed_origins,
     allow_credentials=True,
-    allow_methods=["GET", "POST", "PUT", "DELETE"],
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allow_headers=["*"],
+    expose_headers=["*"]
 )
 
 # Global exception handler
