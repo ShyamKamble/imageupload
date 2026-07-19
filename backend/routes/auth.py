@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException, Depends
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, EmailStr, validator
 from passlib.context import CryptContext
 import psycopg2
 from psycopg2.extras import RealDictCursor
@@ -14,9 +14,11 @@ security = HTTPBearer()
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 # JWT Configuration
-SECRET_KEY = os.getenv("SECRET_KEY", "your-secret-key-change-this-in-production")
+SECRET_KEY = os.getenv("SECRET_KEY")
+if not SECRET_KEY:
+    raise ValueError("SECRET_KEY environment variable is required")
 ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24  # 24 hours
+ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", "1440"))  # 24 hours default
 
 # Database helper
 def get_db():
@@ -48,6 +50,20 @@ class UserRegister(BaseModel):
     email: EmailStr
     username: str
     password: str
+    
+    @validator('username')
+    def validate_username(cls, v):
+        if len(v) < 3:
+            raise ValueError('Username must be at least 3 characters long')
+        if not v.replace('_', '').replace('-', '').isalnum():
+            raise ValueError('Username can only contain letters, numbers, underscores, and hyphens')
+        return v
+    
+    @validator('password')
+    def validate_password(cls, v):
+        if len(v) < 8:
+            raise ValueError('Password must be at least 8 characters long')
+        return v
 
 class UserLogin(BaseModel):
     username: str
@@ -59,14 +75,10 @@ class Token(BaseModel):
 
 # Helper functions
 def verify_password(plain_password, hashed_password):
-    # Truncate password to 72 bytes for bcrypt compatibility
-    truncated = plain_password[:72] if isinstance(plain_password, str) else plain_password
-    return pwd_context.verify(truncated, hashed_password)
+    return pwd_context.verify(plain_password, hashed_password)
 
 def get_password_hash(password):
-    # Truncate password to 72 bytes for bcrypt compatibility
-    truncated = password[:72] if isinstance(password, str) else password
-    return pwd_context.hash(truncated)
+    return pwd_context.hash(password)
 
 def create_access_token(data: dict):
     to_encode = data.copy()
@@ -78,15 +90,22 @@ def create_access_token(data: dict):
 # Routes
 @router.post("/register", response_model=Token)
 async def register(user: UserRegister):
-    conn = get_db()
-    cursor = conn.cursor()
+    conn = None
+    cursor = None
     
     try:
+        conn = get_db()
+        cursor = conn.cursor()
+        
         # Check if user already exists
         cursor.execute("SELECT id FROM users WHERE email = %s OR username = %s", 
                       (user.email, user.username))
-        if cursor.fetchone():
-            raise HTTPException(status_code=400, detail="User already exists")
+        existing_user = cursor.fetchone()
+        if existing_user:
+            raise HTTPException(
+                status_code=400, 
+                detail="User with this email or username already exists"
+            )
         
         # Hash password and create user
         hashed_password = get_password_hash(user.password)
@@ -94,27 +113,50 @@ async def register(user: UserRegister):
             "INSERT INTO users (email, username, password_hash) VALUES (%s, %s, %s) RETURNING id",
             (user.email, user.username, hashed_password)
         )
-        user_id = cursor.fetchone()['id']
+        user_result = cursor.fetchone()
+        if not user_result:
+            raise HTTPException(status_code=500, detail="Failed to create user")
+        
+        user_id = user_result['id']
         conn.commit()
         
         # Create access token
-        access_token = create_access_token(data={"sub": user.username, "user_id": user_id})
+        access_token = create_access_token(
+            data={"sub": user.username, "user_id": user_id}
+        )
         
         return {"access_token": access_token, "token_type": "bearer"}
         
-    except psycopg2.IntegrityError:
-        conn.rollback()
-        raise HTTPException(status_code=400, detail="User already exists")
+    except psycopg2.IntegrityError as e:
+        if conn:
+            conn.rollback()
+        raise HTTPException(
+            status_code=400, 
+            detail="User with this email or username already exists"
+        )
+    except HTTPException:
+        if conn:
+            conn.rollback()
+        raise
+    except Exception as e:
+        if conn:
+            conn.rollback()
+        raise HTTPException(status_code=500, detail="Internal server error")
     finally:
-        cursor.close()
-        conn.close()
+        if cursor:
+            cursor.close()
+        if conn:
+            conn.close()
 
 @router.post("/login", response_model=Token)
 async def login(user: UserLogin):
-    conn = get_db()
-    cursor = conn.cursor()
+    conn = None
+    cursor = None
     
     try:
+        conn = get_db()
+        cursor = conn.cursor()
+        
         cursor.execute("SELECT id, username, password_hash FROM users WHERE username = %s", 
                       (user.username,))
         db_user = cursor.fetchone()
@@ -129,9 +171,15 @@ async def login(user: UserLogin):
         
         return {"access_token": access_token, "token_type": "bearer"}
         
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail="Internal server error")
     finally:
-        cursor.close()
-        conn.close()
+        if cursor:
+            cursor.close()
+        if conn:
+            conn.close()
 
 @router.get("/me")
 async def get_current_user_info(credentials: HTTPAuthorizationCredentials = Depends(security)):

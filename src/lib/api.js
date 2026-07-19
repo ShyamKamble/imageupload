@@ -5,7 +5,7 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
 // Helper function to get auth token from localStorage
 const getAuthToken = () => {
   if (typeof window !== 'undefined') {
-    return localStorage.getItem('authToken');
+    return localStorage.getItem('token');
   }
   return null;
 };
@@ -29,7 +29,7 @@ const fetchWithAuth = async (url, options = {}) => {
 
   if (response.status === 401) {
     // Token expired or invalid
-    localStorage.removeItem('authToken');
+    localStorage.removeItem('token');
     localStorage.removeItem('user');
     window.location.href = '/login';
     throw new Error('Unauthorized');
@@ -54,8 +54,8 @@ export const authAPI = {
     }
     
     const data = await response.json();
-    // Store token
-    localStorage.setItem('authToken', data.access_token);
+    // Store token with consistent key name
+    localStorage.setItem('token', data.access_token);
     return data;
   },
 
@@ -73,14 +73,14 @@ export const authAPI = {
     }
     
     const data = await response.json();
-    // Store token
-    localStorage.setItem('authToken', data.access_token);
+    // Store token with consistent key name
+    localStorage.setItem('token', data.access_token);
     return data;
   },
 
   // Logout
   logout: () => {
-    localStorage.removeItem('authToken');
+    localStorage.removeItem('token');
     localStorage.removeItem('user');
     window.location.href = '/';
   },

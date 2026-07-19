@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException, Depends, UploadFile, File, Form
+from fastapi import APIRouter, HTTPException, Depends, UploadFile, File, Form, Body
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 import boto3
 import psycopg2
@@ -20,7 +20,9 @@ s3_client = boto3.client('s3',
 )
 
 BUCKET_NAME = os.getenv('S3_BUCKET_NAME', 'my-app-user-images-private-614333541255-ap-south-1-an')
-SECRET_KEY = os.getenv("SECRET_KEY", "your-secret-key-change-this-in-production")
+SECRET_KEY = os.getenv("SECRET_KEY")
+if not SECRET_KEY:
+    raise ValueError("SECRET_KEY environment variable is required")
 ALGORITHM = "HS256"
 
 # Database initialization
@@ -184,6 +186,51 @@ async def delete_image(image_id: int, current_user: dict = Depends(get_current_u
             conn.close()
             raise HTTPException(status_code=404, detail="Image not found")
         
+        s3_key = result['s3_key']
+        
+        # Delete from S3
+        s3_client.delete_object(Bucket=BUCKET_NAME, Key=s3_key)
+        
+        # Delete from database
+        cursor.execute(
+            'DELETE FROM users_images_table WHERE image_id = %s AND user_id = %s',
+            (image_id, user_id)
+        )
+        conn.commit()
+        conn.close()
+        
+        return {"message": "Image deleted successfully", "image_id": image_id}
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"Error deleting image: {e}")
+        raise HTTPException(status_code=500, detail=f"Delete failed: {str(e)}")
+
+@router.post("/delete-image")
+async def delete_image_by_path(request: dict = Body(...), current_user: dict = Depends(get_current_user)):
+    """Delete image by fullPath (for frontend compatibility)"""
+    user_id = current_user["user_id"]
+    full_path = request.get("fullPath")
+    
+    if not full_path:
+        raise HTTPException(status_code=400, detail="fullPath is required")
+    
+    try:
+        # Get image_id from s3_key
+        conn = get_db()
+        cursor = conn.cursor()
+        cursor.execute(
+            'SELECT image_id, s3_key FROM users_images_table WHERE s3_key = %s AND user_id = %s',
+            (full_path, user_id)
+        )
+        result = cursor.fetchone()
+        
+        if not result:
+            conn.close()
+            raise HTTPException(status_code=404, detail="Image not found")
+        
+        image_id = result['image_id']
         s3_key = result['s3_key']
         
         # Delete from S3

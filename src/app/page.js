@@ -21,7 +21,6 @@ import {MinimalCardDemo} from "../componentbyme/Card.jsx";
 import {FeaturesSectionDemo} from "../componentbyme/Featuresection.jsx";
 import { InfiniteMovingCardsDemo } from "@/componentbyme/Scroll.jsx";
 import { Footer2 } from "@/componentbyme/Footer.jsx";
-import { AuthUI } from "@/components/AuthUI.jsx";
 const inter = Inter({ subsets: ['latin'] });
 
 export default function Page() {
