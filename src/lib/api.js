@@ -164,9 +164,11 @@ export const imageAPI = {
     return await response.json();
   },
 
-  // Get all user images
-  getImages: async () => {
-    const response = await fetchWithAuth(`${API_BASE_URL}/api/images`);
+  // Get all user images (with optional pagination)
+  getImages: async (limit = 50, offset = 0) => {
+    const response = await fetchWithAuth(
+      `${API_BASE_URL}/api/images?limit=${limit}&offset=${offset}`
+    );
     
     if (!response.ok) {
       throw new Error('Failed to fetch images');
@@ -180,6 +182,20 @@ export const imageAPI = {
   deleteImage: async (imageId) => {
     const response = await fetchWithAuth(`${API_BASE_URL}/api/images/${imageId}`, {
       method: 'DELETE',
+    });
+    
+    if (!response.ok) {
+      throw new Error('Failed to delete image');
+    }
+    
+    return await response.json();
+  },
+
+  // Delete image by s3_key (fullPath)
+  deleteImageByPath: async (s3_key) => {
+    const response = await fetchWithAuth(`${API_BASE_URL}/api/delete-image`, {
+      method: 'POST',
+      body: JSON.stringify({ fullPath: s3_key }),
     });
     
     if (!response.ok) {

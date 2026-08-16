@@ -1,9 +1,21 @@
-fastapi==0.115.5
-uvicorn[standard]==0.32.1
-python-jose[cryptography]==3.3.0
-passlib[bcrypt]==1.7.4
-python-multipart==0.0.12
-boto3==1.35.76
-psycopg2-binary==2.9.10
-pydantic==2.10.3
-PyJWT==2.10.1
+# Core Framework
+fastapi==0.115.5              # Modern web framework
+uvicorn[standard]==0.32.1     # ASGI server
+
+# Security & Authentication
+passlib[bcrypt]==1.7.4        # Password hashing
+PyJWT==2.10.1                 # JWT token handling
+slowapi==0.1.9                # Rate limiting
+
+# File Handling
+python-multipart==0.0.12      # File upload support
+python-magic==0.4.27          # File type detection
+
+# AWS Integration
+boto3==1.35.76                # AWS SDK
+
+# Database
+psycopg2-binary==2.9.10       # PostgreSQL adapter
+
+# Validation
+pydantic==2.10.3              # Data validation

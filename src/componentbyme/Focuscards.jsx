@@ -31,7 +31,11 @@ export function FocusCardsDemo() {
       } catch (error) {
         console.error("Error fetching images:", error);
         if (!ignore) {
-          setError("Failed to load images. Please try again.");
+          if (error.message === 'Unauthorized') {
+            router.push('/login');
+          } else {
+            setError("Failed to load images. Please try again.");
+          }
         }
       } finally {
         if (!ignore) setLoading(false);
@@ -40,7 +44,7 @@ export function FocusCardsDemo() {
 
     fetchImages();
     return () => { ignore = true; };
-  }, []);
+  }, [router]);
 
   if (loading) {
     return (
@@ -71,7 +75,6 @@ export function FocusCardsDemo() {
             storagePath={card.s3_key}
             layoutKey={card.id}
             thumbClass="w-full h-60 md:h-96"
-            imageId={card.imageId}
             onDeleted={(deletedPath) => {
               setCards((prev) => prev.filter((c) => c.s3_key !== deletedPath));
             }}
@@ -86,7 +89,7 @@ export function FocusCardsDemo() {
       ))}
       
       <div
-        onClick={() => router.push("/for-you/index")}
+        onClick={() => router.push("/upload")}
         className="rounded-lg relative h-60 md:h-96 bg-gray-100 dark:bg-neutral-900 border-2 border-dashed border-gray-400 flex flex-col items-center justify-center cursor-pointer hover:bg-gray-200 dark:hover:bg-neutral-800 transition-all duration-300"
       >
         <span className="text-6xl font-bold text-gray-500">+</span>

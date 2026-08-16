@@ -12,6 +12,7 @@ def test_connection():
     print(f"Database: {DB_CONFIG['database']}")
     print(f"User: {DB_CONFIG['user']}")
     print(f"Port: {DB_CONFIG['port']}")
+    print("Password: [HIDDEN]")
     print("-" * 50)
     
     try:

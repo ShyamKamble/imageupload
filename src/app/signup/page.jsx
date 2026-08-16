@@ -1,5 +1,6 @@
 "use client";
 import { useState } from "react";
+import Link from "next/link";
 import { authAPI } from "../../lib/api";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -45,7 +46,7 @@ export default function SignupPage() {
     }
 
     // FIXED: Escaped the hyphen to prevent regex parser errors
-    if (!/^[a-zA-Z0-9_\-]+$/.test(username)) {
+    if (!/^[a-zA-Z0-9_-]+$/.test(username)) {
       setError("Username can only contain letters, numbers, underscores, and hyphens");
       return;
     }
@@ -63,7 +64,8 @@ export default function SignupPage() {
     setLoading(true);
 
     try {
-      await authAPI.register(email, username, password);
+      const response = await authAPI.register(email, username, password);
+      // Token is already stored in authAPI.register
       setAlertOpen(true);
     } catch (err) {
       setError(err.message || "An error occurred");
@@ -114,8 +116,7 @@ export default function SignupPage() {
               placeholder="john_doe or johndoe123"
               minLength={3}
               maxLength={100}
-              // FIXED: Escaped the hyphen here as well
-              pattern="[a-zA-Z0-9_\-]+"
+              pattern="[a-zA-Z0-9_-]+"
               required
             />
             <p className="text-xs text-muted-foreground mt-1">
@@ -147,15 +148,15 @@ export default function SignupPage() {
         </form>
 
         <div className="mt-6 text-center">
-          <a href="/login" className="text-sm text-primary hover:underline">
+          <Link href="/login" className="text-sm text-primary hover:underline">
             Already have an account? Login
-          </a>
+          </Link>
         </div>
 
         <div className="mt-4 text-center">
-          <a href="/" className="text-sm text-muted-foreground hover:text-primary">
+          <Link href="/" className="text-sm text-muted-foreground hover:text-primary">
             ← Back to Home
-          </a>
+          </Link>
         </div>
       </div>
 

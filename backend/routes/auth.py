@@ -7,11 +7,13 @@ from psycopg2.extras import RealDictCursor
 import jwt
 from datetime import datetime, timedelta
 import os
+import logging
 from db_config import DB_CONFIG
 
 router = APIRouter()
 security = HTTPBearer()
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+logger = logging.getLogger(__name__)
 
 # JWT Configuration
 SECRET_KEY = os.getenv("SECRET_KEY")
@@ -22,8 +24,19 @@ ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", "1440
 
 # Database helper
 def get_db():
-    conn = psycopg2.connect(**DB_CONFIG, cursor_factory=RealDictCursor)
-    return conn
+    try:
+        conn = psycopg2.connect(**DB_CONFIG, cursor_factory=RealDictCursor)
+        return conn
+    except psycopg2.OperationalError as e:
+        raise HTTPException(
+            status_code=503, 
+            detail="Database connection failed. Please try again later."
+        )
+    except Exception as e:
+        raise HTTPException(
+            status_code=500, 
+            detail="Database error occurred"
+        )
 
 # Initialize database
 def init_db():
@@ -63,6 +76,8 @@ class UserRegister(BaseModel):
     def validate_password(cls, v):
         if len(v) < 8:
             raise ValueError('Password must be at least 8 characters long')
+        if len(v) > 72:
+            raise ValueError('Password must be less than 72 characters (bcrypt limitation)')
         return v
 
 class UserLogin(BaseModel):

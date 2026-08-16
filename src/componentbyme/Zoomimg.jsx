@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Trash2 } from "lucide-react";
+import { imageAPI } from "../lib/api";
 
 export default function ZoomImage({
   src,
@@ -25,31 +26,13 @@ export default function ZoomImage({
     setDeleting(true);
 
     try {
-      const token = localStorage.getItem('token');
-      if (!token) {
-        console.error("Not authenticated");
-        setDeleting(false);
-        return;
-      }
-
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/delete-image`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
-        body: JSON.stringify({ fullPath: storagePath }),
-      });
-
-      if (!res.ok) {
-        throw new Error('Failed to delete image');
-      }
-
+      await imageAPI.deleteImageByPath(storagePath);
       console.log("File deleted:", storagePath);
       if (onDeleted) onDeleted(storagePath);
       setIsOpen(false);
     } catch (error) {
       console.error("Error deleting file:", error);
+      alert("Failed to delete image. Please try again.");
     } finally {
       setDeleting(false);
     }
@@ -91,9 +74,14 @@ export default function ZoomImage({
               <button
                 onClick={handleDelete}
                 disabled={deleting}
-                className="absolute bottom-3 right-3 backdrop-blur-sm bg-white/30 p-2 rounded-full shadow hover:bg-red-500 hover:text-white transition disabled:opacity-50"
+                className="absolute bottom-3 right-3 backdrop-blur-sm bg-white/30 p-2 rounded-full shadow hover:bg-red-500 hover:text-white transition disabled:opacity-50 disabled:cursor-not-allowed"
+                title={deleting ? "Deleting..." : "Delete image"}
               >
-                <Trash2 size={20} />
+                {deleting ? (
+                  <span className="text-xs">...</span>
+                ) : (
+                  <Trash2 size={20} />
+                )}
               </button>
             </motion.div>
           </motion.div>

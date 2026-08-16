@@ -1,7 +1,6 @@
 "use client"
 
 import React from "react"
-import { SparklesIcon } from "lucide-react"
 
 import { Badge } from "@/components/ui/badge"
 

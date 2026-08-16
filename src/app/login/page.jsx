@@ -1,5 +1,6 @@
 "use client";
 import { useState } from "react";
+import Link from "next/link";
 import { authAPI } from "../../lib/api";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -127,9 +128,9 @@ export default function LoginPage() {
         </div>
 
         <div className="mt-4 text-center">
-          <a href="/" className="text-sm text-muted-foreground hover:text-primary">
+          <Link href="/" className="text-sm text-muted-foreground hover:text-primary">
             ← Back to Home
-          </a>
+          </Link>
         </div>
       </div>
 

@@ -6,11 +6,24 @@ from psycopg2.extras import RealDictCursor
 import uuid
 import os
 import jwt
+import logging
+import io
 from botocore.exceptions import ClientError
 from db_config import DB_CONFIG
 
 router = APIRouter()
 security = HTTPBearer()
+logger = logging.getLogger(__name__)
+
+# Image MIME types mapping
+IMAGE_MIME_TYPES = {
+    'image/jpeg': ['jpg', 'jpeg'],
+    'image/png': ['png'],
+    'image/gif': ['gif'],
+    'image/webp': ['webp'],
+    'image/bmp': ['bmp'],
+    'image/svg+xml': ['svg']
+}
 
 # AWS S3 Configuration - ONLY from environment variables
 s3_client = boto3.client('s3',
@@ -19,7 +32,10 @@ s3_client = boto3.client('s3',
     region_name=os.getenv('AWS_REGION', 'ap-south-1')
 )
 
-BUCKET_NAME = os.getenv('S3_BUCKET_NAME', 'my-app-user-images-private-614333541255-ap-south-1-an')
+BUCKET_NAME = os.getenv('S3_BUCKET_NAME')
+if not BUCKET_NAME:
+    raise ValueError("S3_BUCKET_NAME environment variable is required")
+
 SECRET_KEY = os.getenv("SECRET_KEY")
 if not SECRET_KEY:
     raise ValueError("SECRET_KEY environment variable is required")
@@ -32,19 +48,32 @@ def init_db():
     cursor.execute('''
     CREATE TABLE IF NOT EXISTS users_images_table (
         image_id SERIAL PRIMARY KEY,
-        user_id INTEGER NOT NULL,
+        user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
         file_name VARCHAR(255),
         s3_key VARCHAR(500) NOT NULL UNIQUE,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     );
+    CREATE INDEX IF NOT EXISTS idx_user_images ON users_images_table(user_id);
+    CREATE INDEX IF NOT EXISTS idx_s3_key_images ON users_images_table(s3_key);
     ''')
     conn.commit()
     cursor.close()
     conn.close()
 
 def get_db():
-    conn = psycopg2.connect(**DB_CONFIG, cursor_factory=RealDictCursor)
-    return conn
+    try:
+        conn = psycopg2.connect(**DB_CONFIG, cursor_factory=RealDictCursor)
+        return conn
+    except psycopg2.OperationalError as e:
+        raise HTTPException(
+            status_code=503, 
+            detail="Database connection failed. Please try again later."
+        )
+    except Exception as e:
+        raise HTTPException(
+            status_code=500, 
+            detail="Database error occurred"
+        )
 
 # Initialize database on module load
 init_db()
@@ -76,7 +105,7 @@ def create_presigned_url(bucket_name, object_name, expiration=3600):
         )
         return response 
     except ClientError as e:
-        print(f"Error generating presigned URL: {e}")
+        logger.error(f"Error generating presigned URL: {e}")
         return None
 
 # Routes
@@ -92,8 +121,28 @@ async def upload_image(
     if not file.content_type.startswith('image/'):
         raise HTTPException(status_code=400, detail="File must be an image")
     
-    # Generate unique filename
-    file_extension = file.filename.split('.')[-1] if '.' in file.filename else 'jpg'
+    # Validate file size (limit to 10MB)
+    file.file.seek(0, 2)  # Seek to end
+    file_size = file.file.tell()  # Get position (file size)
+    file.file.seek(0)  # Reset to beginning
+    
+    MAX_FILE_SIZE = 10 * 1024 * 1024  # 10MB in bytes
+    if file_size > MAX_FILE_SIZE:
+        raise HTTPException(
+            status_code=400, 
+            detail=f"File too large. Maximum size is 10MB, your file is {file_size / (1024*1024):.2f}MB"
+        )
+    
+    # Generate unique filename with validated extension
+    ALLOWED_EXTENSIONS = {'jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp', 'svg'}
+    file_extension = file.filename.split('.')[-1].lower() if '.' in file.filename else 'jpg'
+    
+    if file_extension not in ALLOWED_EXTENSIONS:
+        raise HTTPException(
+            status_code=400, 
+            detail=f"Invalid file extension. Allowed: {', '.join(ALLOWED_EXTENSIONS)}"
+        )
+    
     unique_filename = f"{uuid.uuid4()}.{file_extension}"
     s3_key = f"users/user_{user_id}/{unique_filename}"
     
@@ -130,20 +179,43 @@ async def upload_image(
         }
         
     except Exception as e:
-        print(f"Error uploading image: {e}")
+        logger.error(f"Error uploading image: {e}")
         raise HTTPException(status_code=500, detail=f"Upload failed: {str(e)}")
 
 @router.get("/images")
-async def get_all_images(current_user: dict = Depends(get_current_user)):
-    """Get all images for the current user"""
+async def get_all_images(
+    limit: int = 50, 
+    offset: int = 0,
+    current_user: dict = Depends(get_current_user)
+):
+    """Get paginated images for the current user"""
     user_id = current_user["user_id"]
+    
+    # Validate pagination params
+    if limit < 1 or limit > 100:
+        raise HTTPException(status_code=400, detail="Limit must be between 1 and 100")
+    if offset < 0:
+        raise HTTPException(status_code=400, detail="Offset must be non-negative")
     
     try:
         conn = get_db()
         cursor = conn.cursor()
+        
+        # Get total count
         cursor.execute(
-            'SELECT image_id, file_name, s3_key, created_at FROM users_images_table WHERE user_id = %s ORDER BY created_at DESC',
+            'SELECT COUNT(*) FROM users_images_table WHERE user_id = %s',
             (user_id,)
+        )
+        total_count = cursor.fetchone()['count']
+        
+        # Get paginated images
+        cursor.execute(
+            '''SELECT image_id, file_name, s3_key, created_at 
+               FROM users_images_table 
+               WHERE user_id = %s 
+               ORDER BY created_at DESC
+               LIMIT %s OFFSET %s''',
+            (user_id, limit, offset)
         )
         db_images = cursor.fetchall()
         conn.close()
@@ -161,10 +233,17 @@ async def get_all_images(current_user: dict = Depends(get_current_user)):
                     "created_at": img['created_at'].isoformat() if img['created_at'] else None
                 })
         
-        return {"images": result, "count": len(result)}
+        return {
+            "images": result, 
+            "count": len(result),
+            "total": total_count,
+            "limit": limit,
+            "offset": offset,
+            "hasMore": (offset + len(result)) < total_count
+        }
         
     except Exception as e:
-        print(f"Error fetching images: {e}")
+        logger.error(f"Error fetching images: {e}")
         raise HTTPException(status_code=500, detail=f"Failed to fetch images: {str(e)}")
 
 @router.delete("/images/{image_id}")
@@ -204,7 +283,7 @@ async def delete_image(image_id: int, current_user: dict = Depends(get_current_u
     except HTTPException:
         raise
     except Exception as e:
-        print(f"Error deleting image: {e}")
+        logger.error(f"Error deleting image: {e}")
         raise HTTPException(status_code=500, detail=f"Delete failed: {str(e)}")
 
 @router.post("/delete-image")
@@ -249,7 +328,7 @@ async def delete_image_by_path(request: dict = Body(...), current_user: dict = D
     except HTTPException:
         raise
     except Exception as e:
-        print(f"Error deleting image: {e}")
+        logger.error(f"Error deleting image by path: {e}")
         raise HTTPException(status_code=500, detail=f"Delete failed: {str(e)}")
 
 @router.post("/images/presigned-upload")
@@ -284,5 +363,5 @@ async def generate_presigned_upload(
         }
         
     except Exception as e:
-        print(f"Error generating presigned URL: {e}")
+        logger.error(f"Error generating presigned URL: {e}")
         raise HTTPException(status_code=500, detail=f"Failed to generate upload URL: {str(e)}")
