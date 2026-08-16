@@ -19,6 +19,7 @@ if ENVIRONMENT == "production":
     allowed_origins = [
         "https://samsite.in",
         "https://www.samsite.in",
+        "https://d3v8kbw6tdddzh.cloudfront.net",
         "http://aws-bucket-frontend-pages.s3-website.ap-south-1.amazonaws.com",
     ]
 else:
@@ -26,6 +27,7 @@ else:
         "http://localhost:3000",
         "https://samsite.in",
         "https://www.samsite.in",
+        "https://d3v8kbw6tdddzh.cloudfront.net",
         "http://aws-bucket-frontend-pages.s3-website.ap-south-1.amazonaws.com",
     ]
 

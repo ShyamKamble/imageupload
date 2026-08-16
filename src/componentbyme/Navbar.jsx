@@ -2,6 +2,7 @@
 
 import * as React from "react"
 import Link from "next/link"
+import { usePathname } from "next/navigation"
 
 import {
   NavigationMenu,
@@ -13,14 +14,19 @@ import {
 
 export function NavigationMenuDemo() {
   const [isLoggedIn, setIsLoggedIn] = React.useState(false);
+  const pathname = usePathname();
 
   React.useEffect(() => {
-    // Safe client-side only access
-    if (typeof window !== 'undefined') {
-      const token = localStorage.getItem('token');
-      setIsLoggedIn(!!token);
-    }
-  }, []);
+    // Check token on mount and route change
+    const checkAuth = () => {
+      if (typeof window !== 'undefined') {
+        const token = localStorage.getItem('token');
+        setIsLoggedIn(!!token);
+      }
+    };
+    
+    checkAuth();
+  }, [pathname]);
 
   const handleLogout = () => {
     if (typeof window !== 'undefined') {

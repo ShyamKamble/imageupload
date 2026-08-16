@@ -13,6 +13,7 @@ import {
   AlertDialogAction,
 } from "../../../components/ui/alert-dialog";
 import { NavigationMenuDemo } from "@/componentbyme/Navbar.jsx";
+import { imageAPI } from "@/lib/api";
 
 export default function Home() {
   const [file, setFile] = useState(null);
@@ -34,19 +35,8 @@ export default function Home() {
   const loadUserImages = async () => {
     setLoading(true);
     try {
-      const token = localStorage.getItem('token');
-      if (!token) return;
-
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/images`, {
-        headers: { 
-          'Authorization': `Bearer ${token}` 
-        },
-      });
-
-      if (!res.ok) throw new Error('Failed to load images');
-
-      const data = await res.json();
-      setUserImages(data.images || []);
+      const images = await imageAPI.getImages();
+      setUserImages(images || []);
     } catch (err) {
       console.error('Error loading images:', err);
     } finally {
@@ -69,23 +59,7 @@ export default function Home() {
         return;
       }
 
-      // Upload to backend
-      const formData = new FormData();
-      formData.append('file', file);
-
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/images/upload`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
-        body: formData,
-      });
-
-      if (!response.ok) {
-        throw new Error('Upload failed');
-      }
-
-      const result = await response.json();
+      const result = await imageAPI.uploadImage(file);
       console.log('Upload success:', result);
       
       setAlertOpen(true);
@@ -125,7 +99,7 @@ export default function Home() {
   if (!isAuthenticated) {
     return (
       <section className="min-h-screen flex justify-center items-center p-6 bg-background">
-        <div className="fixed top-0 left-1/2 w-full max-w-2xl md:max-w-4xl transform -translate-x-1/2 z-50 bg-transparent backdrop-blur-md shadow-lg rounded-xl px-6 py-4 transition-all duration-300">
+        <div className="fixed top-0 left-0 right-0 w-full z-50 bg-transparent backdrop-blur-md shadow-lg rounded-xl px-4 md:px-6 py-4 transition-all duration-300">
           <NavigationMenuDemo />
         </div>
         <div className="max-w-xl w-full bg-card border border-border rounded-xl shadow-sm animate-fade-in flex flex-col items-center p-6">
@@ -137,7 +111,7 @@ export default function Home() {
 
   return (
     <section className="min-h-screen flex justify-center items-center p-6 bg-background">
-      <div className="fixed top-0 left-1/2 w-full max-w-2xl md:max-w-4xl transform -translate-x-1/2 z-50 bg-transparent backdrop-blur-md shadow-lg rounded-xl px-6 py-4 transition-all duration-300">
+      <div className="fixed top-0 left-0 right-0 w-full z-50 bg-transparent backdrop-blur-md shadow-lg rounded-xl px-4 md:px-6 py-4 transition-all duration-300">
         <NavigationMenuDemo />
       </div>
 
@@ -179,41 +153,30 @@ export default function Home() {
                     className="w-full h-auto"
                     loading="lazy"
                   />
-                  {/* <div className="p-2 bg-muted/50 flex justify-between items-center">
+                  <div className="p-2 bg-muted/50 flex justify-between items-center">
                     <span className="text-xs text-muted-foreground truncate">
                       {image.fileName}
                     </span>
-                    <button
-                      onClick={() => deleteImage(image.s3_key, image.fileName)}
-                      className="text-xs px-2 py-1 rounded bg-destructive text-destructive-foreground hover:bg-destructive/90 transition-colors"
-                    >
-                      Delete
-                    </button>
-                  </div> */}
-                  <div className="p-2 bg-muted/50 flex justify-between items-center">
-  <span className="text-xs text-muted-foreground truncate">
-    {image.fileName}
-  </span>
 
-  <div className="flex gap-2">
-    <button
-      onClick={() => {
-        navigator.clipboard.writeText(image.url);
-        alert("Share link copied!");
-      }}
-      className="text-xs px-2 py-1 rounded bg-blue-600 text-white hover:bg-blue-700 transition-colors"
-    >
-      Copy Link
-    </button>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => {
+                          navigator.clipboard.writeText(image.url);
+                          alert("Share link copied!");
+                        }}
+                        className="text-xs px-2 py-1 rounded bg-blue-600 text-white hover:bg-blue-700 transition-colors"
+                      >
+                        Copy Link
+                      </button>
 
-    <button
-      onClick={() => deleteImage(image.s3_key, image.fileName)}
-      className="text-xs px-2 py-1 rounded bg-destructive text-destructive-foreground hover:bg-destructive/90 transition-colors"
-    >
-      Delete
-    </button>
-  </div>
-</div>
+                      <button
+                        onClick={() => deleteImage(image.s3_key, image.fileName)}
+                        className="text-xs px-2 py-1 rounded bg-destructive text-destructive-foreground hover:bg-destructive/90 transition-colors"
+                      >
+                        Delete
+                      </button>
+                    </div>
+                  </div>
                 </div>
               ))}
             </div>

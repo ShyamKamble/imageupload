@@ -8,6 +8,7 @@ import { useRouter } from "next/navigation";
 export function FocusCardsDemo() {
   const [cards, setCards] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const router = useRouter();
 
   useEffect(() => {
@@ -29,6 +30,9 @@ export function FocusCardsDemo() {
         }
       } catch (error) {
         console.error("Error fetching images:", error);
+        if (!ignore) {
+          setError("Failed to load images. Please try again.");
+        }
       } finally {
         if (!ignore) setLoading(false);
       }
@@ -42,6 +46,14 @@ export function FocusCardsDemo() {
     return (
       <div className="flex justify-center items-center min-h-screen">
         <div>Loading images...</div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex justify-center items-center min-h-screen">
+        <div className="text-red-500">{error}</div>
       </div>
     );
   }

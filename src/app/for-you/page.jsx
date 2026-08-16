@@ -3,8 +3,36 @@
 import { NavigationMenuDemo } from "@/componentbyme/Navbar.jsx";
 import ThemeToggleButton from "@/components/ui/theme-toggle-button.jsx";
 import { FocusCardsDemo } from "@/componentbyme/Focuscards.jsx";
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 
 export default function ForYouPage() {
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const router = useRouter();
+
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      router.push('/login');
+    } else {
+      setIsAuthenticated(true);
+    }
+    setLoading(false);
+  }, [router]);
+
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center min-h-screen">
+        <div>Loading...</div>
+      </div>
+    );
+  }
+
+  if (!isAuthenticated) {
+    return null;
+  }
+
   return (
     <>
       <div
