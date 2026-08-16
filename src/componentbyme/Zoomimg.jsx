@@ -32,7 +32,7 @@ export default function ZoomImage({
         return;
       }
 
-      const res = await fetch('/api/delete-image', {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/delete-image`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -78,13 +78,13 @@ export default function ZoomImage({
           >
             <motion.div
               layoutId={`image-${id}`}
-              className="relative overflow-hidden rounded-2xl shadow-2xl"
+              className="relative overflow-hidden rounded-2xl shadow-2xl max-w-[90vw] max-h-[90vh]"
               onClick={(e) => e.stopPropagation()}
             >
               <img
                 src={src}
                 alt={alt}
-                className="w-[400px] h-[400px] object-cover"
+                className="w-full h-full max-w-[400px] max-h-[400px] object-cover"
               />
 
               {/* Trash Button */}

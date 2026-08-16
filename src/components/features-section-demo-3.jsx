@@ -9,9 +9,9 @@ import { IconBrandYoutubeFilled } from "@tabler/icons-react";
 export default function FeaturesSectionDemo() {
   const features = [
     {
-      title: "Track issues effectively",
+      title: "Organize Your Images",
       description:
-        "Track and manage your project issues with ease using our intuitive interface.",
+        "Smart albums and tagging system help you organize and find your images instantly.",
       skeleton: <SkeletonOne />,
       className:
         "col-span-1 lg:col-span-4 border-b lg:border-r dark:border-neutral-800",
@@ -24,9 +24,9 @@ export default function FeaturesSectionDemo() {
       className: "border-b col-span-1 lg:col-span-2 dark:border-neutral-800",
     },
     {
-      title: "Watch our AI on YouTube",
+      title: "Learn More on YouTube",
       description:
-        "Whether its you or Tyler Durden, you can get to know about our product on YouTube",
+        "Watch tutorials and product demos to get the most out of our platform.",
       skeleton: <SkeletonThree />,
       className:
         "col-span-1 lg:col-span-3 lg:border-r  dark:border-neutral-800",
@@ -34,7 +34,7 @@ export default function FeaturesSectionDemo() {
     {
       title: "Deploy in seconds",
       description:
-        "With our blazing fast, state of the art, cutting edge, we are so back cloud servies (read AWS) - you can deploy your model in seconds.",
+        "Lightning-fast cloud infrastructure powered by AWS ensures your images are uploaded and accessible instantly.",
       skeleton: <SkeletonFour />,
       className: "col-span-1 lg:col-span-3 border-b lg:border-none",
     },

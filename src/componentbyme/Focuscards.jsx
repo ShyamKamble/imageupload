@@ -22,6 +22,7 @@ export function FocusCardsDemo() {
             id: image.id,
             title: image.fileName?.split(".")[0] || "Image",
             src: image.url,
+            s3_key: image.s3_key,
             imageId: image.id,
           }));
           setCards(fetched);
@@ -46,7 +47,7 @@ export function FocusCardsDemo() {
   }
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-10 max-w-5xl mx-auto md:px-8 w-full">
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-10 max-w-5xl mx-auto px-4 md:px-8 w-full">
       {cards.map((card) => (
         <div
           key={card.id}
@@ -55,11 +56,12 @@ export function FocusCardsDemo() {
           <ZoomImage
             src={card.src}
             alt={card.title}
+            storagePath={card.s3_key}
             layoutKey={card.id}
             thumbClass="w-full h-60 md:h-96"
             imageId={card.imageId}
-            onDeleted={(deletedId) => {
-              setCards((prev) => prev.filter((c) => c.id !== deletedId));
+            onDeleted={(deletedPath) => {
+              setCards((prev) => prev.filter((c) => c.s3_key !== deletedPath));
             }}
           />
           

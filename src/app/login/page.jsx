@@ -4,6 +4,17 @@ import { authAPI } from "../../lib/api";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import ThemeToggleButton from "@/components/ui/theme-toggle-button.jsx";
+import {
+  AlertDialog,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogAction,
+} from "@/components/ui/alert-dialog";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { AlertCircle } from "lucide-react";
 
 export default function LoginPage() {
   const [isLogin, setIsLogin] = useState(true);
@@ -12,6 +23,7 @@ export default function LoginPage() {
   const [username, setUsername] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [alertOpen, setAlertOpen] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -26,15 +38,19 @@ export default function LoginPage() {
       } else {
         // Register with email, username, and password
         await authAPI.register(email, username, password);
-        alert("Registration successful! Please login.");
-        setIsLogin(true);
-        setEmail("");
+        setAlertOpen(true);
       }
     } catch (err) {
       setError(err.message || "An error occurred");
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleAlertClose = () => {
+    setAlertOpen(false);
+    setIsLogin(true);
+    setEmail("");
   };
 
   return (
@@ -45,9 +61,10 @@ export default function LoginPage() {
         </h1>
 
         {error && (
-          <div className="mb-4 p-3 bg-destructive/10 border border-destructive rounded-md text-destructive text-sm">
-            {error}
-          </div>
+          <Alert variant="destructive" className="mb-4">
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription>{error}</AlertDescription>
+          </Alert>
         )}
 
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -58,7 +75,7 @@ export default function LoginPage() {
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="Enter your email"
+                placeholder="user@example.com"
                 required
               />
             </div>
@@ -70,7 +87,7 @@ export default function LoginPage() {
               type="text"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
-              placeholder="Enter your username"
+              placeholder="john_doe or johndoe123"
               required
             />
           </div>
@@ -81,7 +98,7 @@ export default function LoginPage() {
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              placeholder="Enter your password"
+              placeholder="Minimum 8 characters"
               required
             />
           </div>
@@ -123,6 +140,20 @@ export default function LoginPage() {
           url="https://media.giphy.com/media/5PncuvcXbBuIZcSiQo/giphy.gif?cid=ecf05e47j7vdjtytp3fu84rslaivdun4zvfhej6wlvl6qqsz&ep=v1_stickers_search&rid=giphy.gif&ct=s"
         />
       </div>
+
+      <AlertDialog open={alertOpen} onOpenChange={setAlertOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Registration successful!</AlertDialogTitle>
+            <AlertDialogDescription>
+              Please login.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogAction onClick={handleAlertClose}>Continue</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

@@ -17,11 +17,15 @@ ENVIRONMENT = os.getenv("ENVIRONMENT", "development")
 
 if ENVIRONMENT == "production":
     allowed_origins = [
+        "https://samsite.in",
+        "https://www.samsite.in",
         "http://aws-bucket-frontend-pages.s3-website.ap-south-1.amazonaws.com",
     ]
 else:
     allowed_origins = [
         "http://localhost:3000",
+        "https://samsite.in",
+        "https://www.samsite.in",
         "http://aws-bucket-frontend-pages.s3-website.ap-south-1.amazonaws.com",
     ]
 

@@ -1,13 +1,46 @@
 "use client";
 
-import React from "react";
-import { InfiniteMovingCards } from "./../components/ui/infinite-moving-cards";
+import React, { useState, useEffect } from "react";
+import { RollingText } from "./../components/ui/rolling-text";
 
 export function InfiniteMovingCardsDemo() {
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [key, setKey] = useState(0);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentIndex((prev) => (prev + 1) % testimonials.length);
+      setKey((prev) => prev + 1);
+    }, 8000); // Change customer every 8 seconds
+
+    return () => clearInterval(interval);
+  }, []);
+
+  const currentTestimonial = testimonials[currentIndex];
+
   return (
-    <div
-      className="h-[40rem] rounded-md flex flex-col antialiased bg-[#030712] items-center justify-center relative overflow-hidden">
-      <InfiniteMovingCards items={testimonials} direction="right" speed="slow" />
+    <div className="min-h-[30rem] rounded-md flex flex-col antialiased bg-[#030712] items-center justify-center relative overflow-hidden py-12 px-4">
+      <div className="max-w-4xl w-full">
+        <div key={key} className="flex flex-col items-center text-center space-y-6">
+          <RollingText 
+            text={currentTestimonial.name.toUpperCase()} 
+            speed={0.03} 
+            duration={800}
+            className="text-sm"
+          />
+          <blockquote className="max-w-3xl space-y-4">
+            <RollingText 
+              text={currentTestimonial.quote} 
+              speed={0.015} 
+              duration={600}
+              className="text-base leading-relaxed"
+            />
+            <div className="mt-4 text-gray-500">
+              <p className="text-xs">{currentTestimonial.title}</p>
+            </div>
+          </blockquote>
+        </div>
+      </div>
     </div>
   );
 }
@@ -15,31 +48,14 @@ export function InfiniteMovingCardsDemo() {
 const testimonials = [
   {
     quote:
-      "It was the best of times, it was the worst of times, it was the age of wisdom, it was the age of foolishness, it was the epoch of belief, it was the epoch of incredulity, it was the season of Light, it was the season of Darkness, it was the spring of hope, it was the winter of despair.",
-    name: "Charles Dickens",
-    title: "A Tale of Two Cities",
+      "This platform completely transformed how we manage our image library. The AI-powered organization saves us hours every week.",
+    name: "Sarah Chen",
+    title: "Creative Director, Design Studio",
   },
   {
     quote:
-      "To be, or not to be, that is the question: Whether 'tis nobler in the mind to suffer The slings and arrows of outrageous fortune, Or to take Arms against a Sea of troubles, And by opposing end them: to die, to sleep.",
-    name: "William Shakespeare",
-    title: "Hamlet",
-  },
-  {
-    quote: "All that we see or seem is but a dream within a dream.",
-    name: "Edgar Allan Poe",
-    title: "A Dream Within a Dream",
-  },
-  {
-    quote:
-      "It is a truth universally acknowledged, that a single man in possession of a good fortune, must be in want of a wife.",
-    name: "Jane Austen",
-    title: "Pride and Prejudice",
-  },
-  {
-    quote:
-      "Call me Ishmael. Some years ago—never mind how long precisely—having little or no money in my purse, and nothing particular to interest me on shore, I thought I would sail about a little and see the watery part of the world.",
-    name: "Herman Melville",
-    title: "Moby-Dick",
+      "Secure cloud storage with seamless sharing capabilities. Our team collaboration has never been more efficient.",
+    name: "Michael Rodriguez",
+    title: "Product Manager, Tech Startup",
   },
 ];

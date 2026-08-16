@@ -50,7 +50,23 @@ export const authAPI = {
     
     if (!response.ok) {
       const error = await response.json();
-      throw new Error(error.detail || 'Login failed');
+      let errorMessage = 'Login failed';
+      
+      if (error.detail) {
+        if (typeof error.detail === 'string') {
+          errorMessage = error.detail;
+        } else if (error.detail.msg) {
+          errorMessage = error.detail.msg;
+        }
+      }
+      
+      if (response.status === 401) {
+        errorMessage = 'Invalid username or password';
+      } else if (response.status === 422) {
+        errorMessage = 'Invalid input format. Please check your username and password';
+      }
+      
+      throw new Error(errorMessage);
     }
     
     const data = await response.json();
@@ -69,7 +85,30 @@ export const authAPI = {
     
     if (!response.ok) {
       const error = await response.json();
-      throw new Error(error.detail || 'Registration failed');
+      let errorMessage = 'Registration failed';
+      
+      if (error.detail) {
+        if (typeof error.detail === 'string') {
+          errorMessage = error.detail;
+        } else if (Array.isArray(error.detail)) {
+          const firstError = error.detail[0];
+          if (firstError.msg) {
+            errorMessage = `${firstError.loc ? firstError.loc[1] + ': ' : ''}${firstError.msg}`;
+          }
+        }
+      }
+      
+      if (response.status === 400) {
+        if (errorMessage.includes('email')) {
+          errorMessage = 'Invalid email format or email already exists';
+        } else if (errorMessage.includes('username')) {
+          errorMessage = 'Username already exists or contains invalid characters';
+        }
+      } else if (response.status === 422) {
+        errorMessage = 'Invalid input format. Please check all fields meet requirements';
+      }
+      
+      throw new Error(errorMessage);
     }
     
     const data = await response.json();

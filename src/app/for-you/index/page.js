@@ -37,7 +37,7 @@ export default function Home() {
       const token = localStorage.getItem('token');
       if (!token) return;
 
-      const res = await fetch('/api/images', {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/images`, {
         headers: { 
           'Authorization': `Bearer ${token}` 
         },
@@ -46,7 +46,7 @@ export default function Home() {
       if (!res.ok) throw new Error('Failed to load images');
 
       const data = await res.json();
-      setUserImages(data);
+      setUserImages(data.images || []);
     } catch (err) {
       console.error('Error loading images:', err);
     } finally {
@@ -69,8 +69,25 @@ export default function Home() {
         return;
       }
 
-      // TODO: Implement upload to backend
-      // For now, just show success
+      // Upload to backend
+      const formData = new FormData();
+      formData.append('file', file);
+
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/images/upload`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+        body: formData,
+      });
+
+      if (!response.ok) {
+        throw new Error('Upload failed');
+      }
+
+      const result = await response.json();
+      console.log('Upload success:', result);
+      
       setAlertOpen(true);
       setFile(null);
       await loadUserImages();
@@ -87,7 +104,7 @@ export default function Home() {
       const token = localStorage.getItem('token');
       if (!token) return;
 
-      const res = await fetch('/api/delete-image', {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/delete-image`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -158,21 +175,45 @@ export default function Home() {
                 <div key={index} className="rounded-lg overflow-hidden border border-border">
                   <img
                     src={image.url}
-                    alt={image.name}
+                    alt={image.fileName || 'Uploaded image'}
                     className="w-full h-auto"
                     loading="lazy"
                   />
-                  <div className="p-2 bg-muted/50 flex justify-between items-center">
+                  {/* <div className="p-2 bg-muted/50 flex justify-between items-center">
                     <span className="text-xs text-muted-foreground truncate">
-                      {image.name}
+                      {image.fileName}
                     </span>
                     <button
-                      onClick={() => deleteImage(image.fullPath, image.name)}
+                      onClick={() => deleteImage(image.s3_key, image.fileName)}
                       className="text-xs px-2 py-1 rounded bg-destructive text-destructive-foreground hover:bg-destructive/90 transition-colors"
                     >
                       Delete
                     </button>
-                  </div>
+                  </div> */}
+                  <div className="p-2 bg-muted/50 flex justify-between items-center">
+  <span className="text-xs text-muted-foreground truncate">
+    {image.fileName}
+  </span>
+
+  <div className="flex gap-2">
+    <button
+      onClick={() => {
+        navigator.clipboard.writeText(image.url);
+        alert("Share link copied!");
+      }}
+      className="text-xs px-2 py-1 rounded bg-blue-600 text-white hover:bg-blue-700 transition-colors"
+    >
+      Copy Link
+    </button>
+
+    <button
+      onClick={() => deleteImage(image.s3_key, image.fileName)}
+      className="text-xs px-2 py-1 rounded bg-destructive text-destructive-foreground hover:bg-destructive/90 transition-colors"
+    >
+      Delete
+    </button>
+  </div>
+</div>
                 </div>
               ))}
             </div>

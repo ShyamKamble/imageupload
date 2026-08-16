@@ -9,15 +9,14 @@ export default function ForYouPage() {
     <>
       <div
         className="
-        fixed top-0 left-1/2 
-        w-full max-w-2xl md:max-w-4xl 
-        transform -translate-x-1/2
+        fixed top-0 left-0 right-0
+        w-full
         z-50
         bg-transparent
         backdrop-blur-md
         shadow-lg  
         rounded-xl 
-        px-6 py-4
+        px-4 md:px-6 py-4
         transition-all duration-300
       "
       >

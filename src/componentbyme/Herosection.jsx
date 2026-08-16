@@ -22,10 +22,10 @@ const images = [
 
 export function MouseTrailDemo() {
   return (
-    <section className="mx-auto w-full max-w-5xl">
-  <div className="relative mx-auto flex w-full flex-col items-center justify-center transform -translate-y-24">
+    <section className="mx-auto w-full max-w-6xl px-4">
+  <div className="relative mx-auto flex w-full flex-col items-center justify-center transform -translate-y-8">
     <article className="relative z-50 mt-20 flex flex-col items-center justify-center">
-      <div className="max-w-2xl text-center text-5xl font-semibold tracking-tight ">
+      <div className="max-w-3xl text-center text-3xl md:text-5xl font-semibold tracking-tight ">
         <PointerHighlightDemo />
       </div>
     </article>

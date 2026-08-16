@@ -3,15 +3,14 @@ import { cn } from "@/lib/utils";
 import createGlobe from "cobe";
 import { useEffect, useRef } from "react";
 import { motion } from "motion/react";
-import { IconBrandYoutubeFilled } from "@tabler/icons-react";
 
 
 export function FeaturesSectionDemo() {
   const features = [
     {
-      title: "Track issues effectively",
+      title: "Secure Image Storage",
       description:
-        "Track and manage your project issues with ease using our intuitive interface.",
+        "Store and organize your images securely with our cloud-based platform. Easy access, seamless sharing, and reliable backups.",
       skeleton: <SkeletonOne />,
       className:
         "col-span-1 lg:col-span-4 border-b lg:border-r dark:border-neutral-800",
@@ -24,9 +23,9 @@ export function FeaturesSectionDemo() {
       className: "border-b col-span-1 lg:col-span-2 dark:border-neutral-800",
     },
     {
-      title: "Watch our AI on YouTube",
+      title: "AI-Powered Organization",
       description:
-        "Whether its you or Tyler Durden, you can get to know about our product on YouTube",
+        "Our advanced AI automatically organizes and tags your images, making them easy to find and manage at any time.",
       skeleton: <SkeletonThree />,
       className:
         "col-span-1 lg:col-span-3 lg:border-r  dark:border-neutral-800",
@@ -34,7 +33,7 @@ export function FeaturesSectionDemo() {
     {
       title: "Deploy in seconds",
       description:
-        "With our blazing fast, state of the art, cutting edge, we are so back cloud servies (read AWS) - you can deploy your model in seconds.",
+        "Lightning-fast deployment powered by AWS cloud infrastructure. Upload, store, and share your images instantly with enterprise-grade reliability.",
       skeleton: <SkeletonFour />,
       className: "col-span-1 lg:col-span-3 border-b lg:border-none",
     },
@@ -131,24 +130,18 @@ export const SkeletonOne = () => {
 
 export const SkeletonThree = () => {
   return (
-    <a
-      href="https://www.youtube.com/watch?v=RPa3_AD1_Vs"
-      target="__blank"
-      className="relative flex gap-10  h-full group/image">
-      <div
-        className="w-full  mx-auto bg-transparent dark:bg-transparent group h-full">
-        <div className="flex flex-1 w-full h-full flex-col space-y-2  relative">
-          {/* TODO */}
-          <IconBrandYoutubeFilled className="h-20 w-20 absolute z-10 inset-0 text-red-500 m-auto " />
+    <div className="relative flex gap-10 h-full group/image">
+      <div className="w-full mx-auto bg-transparent dark:bg-transparent group h-full">
+        <div className="flex flex-1 w-full h-full flex-col space-y-2 relative">
           <img
-            src="https://assets.aceternity.com/fireship.jpg"
-            alt="header"
+            src="https://i.pinimg.com/originals/4c/5e/6f/4c5e6f822a0d52052e5b4718a4c70b18.gif"
+            alt="AI Animation"
             width={800}
             height={800}
-            className="h-full w-full aspect-square object-cover object-center rounded-sm blur-none group-hover/image:blur-md transition-all duration-200" />
+            className="h-full w-full aspect-square object-cover object-center rounded-sm" />
         </div>
       </div>
-    </a>
+    </div>
   );
 };
 
@@ -177,7 +170,7 @@ export const SkeletonTwo = () => {
     <div
       className="relative flex flex-col items-start p-8 gap-10 h-full overflow-hidden">
       {/* TODO */}
-      <div className="flex flex-row -ml-20">
+      <div className="flex flex-row -ml-4 md:-ml-20">
         {images.map((image, idx) => (
           <motion.div
             variants={imageVariants}
@@ -229,7 +222,7 @@ export const SkeletonFour = () => {
   return (
     <div
       className="h-60 md:h-60  flex flex-col items-center relative bg-transparent dark:bg-transparent mt-10">
-      <Globe className="absolute -right-10 md:-right-10 -bottom-80 md:-bottom-72" />
+      <Globe className="absolute -right-10 md:-right-10 -bottom-80 md:-bottom-72 scale-75 md:scale-100" />
     </div>
   );
 };

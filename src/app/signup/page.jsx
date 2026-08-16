@@ -4,6 +4,17 @@ import { authAPI } from "../../lib/api";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import ThemeToggleButton from "@/components/ui/theme-toggle-button.jsx";
+import {
+  AlertDialog,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogAction,
+} from "@/components/ui/alert-dialog";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { AlertCircle } from "lucide-react";
 
 export default function SignupPage() {
   const [email, setEmail] = useState("");
@@ -11,6 +22,7 @@ export default function SignupPage() {
   const [username, setUsername] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [alertOpen, setAlertOpen] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -52,13 +64,17 @@ export default function SignupPage() {
 
     try {
       await authAPI.register(email, username, password);
-      alert("Registration successful! Redirecting to For You page...");
-      window.location.href = "/for-you";
+      setAlertOpen(true);
     } catch (err) {
       setError(err.message || "An error occurred");
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleAlertClose = () => {
+    setAlertOpen(false);
+    window.location.href = "/for-you";
   };
 
   return (
@@ -67,9 +83,10 @@ export default function SignupPage() {
         <h1 className="text-3xl font-bold text-center mb-6">Sign Up</h1>
 
         {error && (
-          <div className="mb-4 p-3 bg-destructive/10 border border-destructive rounded-md text-destructive text-sm">
-            {error}
-          </div>
+          <Alert variant="destructive" className="mb-4">
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription>{error}</AlertDescription>
+          </Alert>
         )}
 
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -114,7 +131,7 @@ export default function SignupPage() {
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              placeholder="Min 8 characters"
+              placeholder="Minimum 8 characters"
               minLength={8}
               maxLength={72}
               required
@@ -149,6 +166,20 @@ export default function SignupPage() {
           url="https://media.giphy.com/media/5PncuvcXbBuIZcSiQo/giphy.gif?cid=ecf05e47j7vdjtytp3fu84rslaivdun4zvfhej6wlvl6qqsz&ep=v1_stickers_search&rid=giphy.gif&ct=s"
         />
       </div>
+
+      <AlertDialog open={alertOpen} onOpenChange={setAlertOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Registration successful!</AlertDialogTitle>
+            <AlertDialogDescription>
+              Redirecting to For You page...
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogAction onClick={handleAlertClose}>Continue</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
