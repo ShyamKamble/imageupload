@@ -3,7 +3,12 @@
 Test script to verify database connection
 Run this on EC2 to test if database is accessible
 """
+from dotenv import load_dotenv
 import psycopg2
+
+# Load environment variables
+load_dotenv()
+
 from db_config import DB_CONFIG
 
 def test_connection():

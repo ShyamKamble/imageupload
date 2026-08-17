@@ -2,7 +2,11 @@
 Database configuration for PostgreSQL connection
 Loads credentials from environment variables
 """
+from dotenv import load_dotenv
 import os
+
+# Load environment variables
+load_dotenv()
 
 DB_CONFIG = {
     'host': os.getenv('DB_HOST', 'localhost'),

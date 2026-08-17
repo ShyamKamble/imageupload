@@ -7,6 +7,9 @@ passlib[bcrypt]==1.7.4        # Password hashing
 PyJWT==2.10.1                 # JWT token handling
 slowapi==0.1.9                # Rate limiting
 
+# Configuration
+python-dotenv==1.0.0          # Load environment variables from .env
+
 # File Handling
 python-multipart==0.0.12      # File upload support
 python-magic==0.4.27          # File type detection
